@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}SEO Analizi - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+        <h1 class="text-2xl font-semibold text-gray-900">SEO Analizi</h1>
+
+        <!-- İçerik Seçimi -->
+        <div class="mt-6">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">
+                        Analiz Edilecek İçerik
+                    </label>
+                    <select name="content_id" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        {% for content in contents %}
+                            <option value="{{ content.id }}">{{ content.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Analiz Et
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {% if analysis %}
+        <!-- Analiz Sonuçları -->
+        <div class="mt-8">
+            <h2 class="text-lg font-medium text-gray-900">Analiz Sonuçları</h2>
+            <!-- Analiz sonuçlarını göster -->
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

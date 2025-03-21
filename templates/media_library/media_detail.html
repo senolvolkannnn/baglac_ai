@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ media.title }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+        <!-- Üst Başlık -->
+        <div class="md:flex md:items-center md:justify-between mb-6">
+            <div class="min-w-0 flex-1">
+                <nav class="flex" aria-label="Breadcrumb">
+                    <ol class="flex items-center space-x-4">
+                        <li>
+                            <a href="{% url 'media_library:media_list' %}" class="text-gray-500 hover:text-gray-700">Medya Kütüphanesi</a>
+                        </li>
+                        <li>
+                            <div class="flex items-center">
+                                <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="ml-4 text-gray-500">{{ media.title }}</span>
+                            </div>
+                        </li>
+                    </ol>
+                </nav>
+                <h2 class="mt-2 text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                    {{ media.title }}
+                </h2>
+            </div>
+            <div class="mt-4 flex md:mt-0 md:ml-4 space-x-3">
+                <button type="button" onclick="copyToClipboard('{{ media.file.url }}')"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    <svg class="h-5 w-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+                    </svg>
+                    URL Kopyala
+                </button>
+                <button type="button" onclick="deleteMedia()"
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">
+                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Sil
+                </button>
+            </div>
+        </div>
+
+        <!-- Medya Önizleme -->
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-lg mb-6">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex flex-col items-center">
+                    {% if media.is_image %}
+                        <img src="{{ media.file.url }}" alt="{{ media.title }}" class="max-w-full h-auto rounded-lg">
+                    {% elif media.is_video %}
+                        <video controls class="max-w-full h-auto rounded-lg">
+                            <source src="{{ media.file.url }}" type="{{ media.mime_type }}">
+                            Tarayıcınız video oynatmayı desteklemiyor.
+                        </video>
+                    {% else %}
+                        <div class="text-center p-8">
+                            <img src="{{ media.thumbnail_url }}" alt="{{ media.title }}" class="w-24 h-24 mx-auto">
+                            <a href="{{ media.file.url }}" download 
+                               class="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                İndir
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Medya Bilgileri -->
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Dosya Bilgileri</h3>
+                <dl class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    <div class="px-4 py-5 bg-gray-50 shadow rounded-lg overflow-hidden sm:p-6">
+                        <dt class="text-sm font-medium text-gray-500 truncate">Dosya Tipi</dt>
+                        <dd class="mt-1 text-lg font-semibold text-gray-900">{{ media.get_file_type_display }}</dd>
+                    </div>
+
+                    <div class="px-4 py-5 bg-gray-50 shadow rounded-lg overflow-hidden sm:p-6">
+                        <dt class="text-sm font-medium text-gray-500 truncate">Dosya Boyutu</dt>
+                        <dd class="mt-1 text-lg font-semibold text-gray-900">{{ media.file_size_display }}</dd>
+                    </div>
+
+                    <div class="px-4 py-5 bg-gray-50 shadow rounded-lg overflow-hidden sm:p-6">
+                        <dt class="text-sm font-medium text-gray-500 truncate">Yüklenme Tarihi</dt>
+                        <dd class="mt-1 text-lg font-semibold text-gray-900">{{ media.created_at|date:"d.m.Y H:i" }}</dd>
+                    </div>
+                </dl>
+
+                {% if media.description %}
+                <div class="mt-6">
+                    <h4 class="text-sm font-medium text-gray-900">Açıklama</h4>
+                    <p class="mt-2 text-sm text-gray-500">{{ media.description }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        alert('URL kopyalandı!');
+    });
+}
+
+function deleteMedia() {
+    if (confirm('Bu dosyayı silmek istediğinizden emin misiniz?')) {
+        fetch("{% url 'media_library:media_delete' pk=media.id %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+        }).then(response => {
+            if (response.ok) {
+                window.location.href = "{% url 'media_library:media_list' %}";
+            }
+        });
+    }
+}
+</script>
+{% endblock %} 

@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}AI İçerik Oluştur{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+        <h1 class="text-2xl font-semibold text-gray-900">AI İçerik Oluştur</h1>
+        
+        <form method="post" class="mt-6 space-y-6">
+            {% csrf_token %}
+            
+            <!-- Ana Başlık -->
+            <div>
+                <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Ana Başlık
+                </label>
+                {{ form.title }}
+            </div>
+
+            <!-- Alt Başlıklar -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Alt Başlıklar</label>
+                <div id="subtitles-container">
+                    <input type="text" name="subtitles[]" class="mt-1 form-input block w-full" placeholder="Alt başlık ekleyin">
+                </div>
+                <button type="button" id="add-subtitle" class="mt-2 inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200">
+                    + Alt Başlık Ekle
+                </button>
+            </div>
+
+            <!-- Anahtar Kelimeler -->
+            <div>
+                <label for="{{ form.keywords.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Anahtar Kelimeler
+                </label>
+                {{ form.keywords }}
+                <p class="mt-1 text-sm text-gray-500">Örnek: yapay zeka, makine öğrenmesi, derin öğrenme</p>
+            </div>
+
+            <!-- İçerik Tipi -->
+            <div>
+                <label for="id_category" class="block text-sm font-medium leading-6 text-gray-900">
+                    İçerik Tipi
+                </label>
+                <div class="mt-2">
+                    <select name="content_type" id="id_category" required
+                            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                        <option value="blog">Blog Yazısı</option>
+                        <option value="category">Kategori İçeriği</option>
+                        <option value="product">Ürün İçeriği</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- İçerik Tonu -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">İçerik Tonu</label>
+                <div class="mt-2 space-y-4">
+                    {{ form.tone }}
+                </div>
+            </div>
+
+            <!-- İçerik Uzunluğu -->
+            <div>
+                <label for="{{ form.length.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    İçerik Uzunluğu
+                </label>
+                {{ form.length }}
+            </div>
+
+            <div class="pt-5">
+                <div class="flex justify-end">
+                    <button type="button" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        İptal
+                    </button>
+                    <button type="submit" class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        İçerik Oluştur
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById('add-subtitle').addEventListener('click', function() {
+    const container = document.getElementById('subtitles-container');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.name = 'subtitles[]';
+    input.className = 'mt-2 form-input block w-full';
+    input.placeholder = 'Alt başlık ekleyin';
+    container.appendChild(input);
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,44 @@
+.content-body {
+    line-height: 1.6;
+    font-size: 16px;
+}
+
+.content-body p {
+    margin-bottom: 1.2em;
+    color: #374151;
+}
+
+.content-body h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.content-body ul, .content-body ol {
+    margin-bottom: 1.2em;
+    padding-left: 2em;
+}
+
+.content-body li {
+    margin-bottom: 0.5em;
+    color: #374151;
+}
+
+.content-body table {
+    width: 100%;
+    margin-bottom: 1.2em;
+    border-collapse: collapse;
+}
+
+.content-body table th,
+.content-body table td {
+    padding: 0.75rem;
+    border: 1px solid #E5E7EB;
+}
+
+.content-body table th {
+    background-color: #F3F4F6;
+    font-weight: 600;
+} 

@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Analytics Dashboard - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+        <!-- Üst Başlık -->
+        <div class="md:flex md:items-center md:justify-between mb-6">
+            <div class="min-w-0 flex-1">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                    Analytics Dashboard
+                </h2>
+                <p class="mt-1 text-sm text-gray-500">
+                    İçerik performansınızı takip edin
+                </p>
+            </div>
+        </div>
+
+        <!-- İstatistik Kartları -->
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+            <!-- Toplam İçerik -->
+            <div class="bg-white overflow-hidden shadow-sm ring-1 ring-gray-900/5 rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">
+                                    Toplam İçerik
+                                </dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900">
+                                        {{ total_content }}
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ortalama SEO Skoru -->
+            <div class="bg-white overflow-hidden shadow-sm ring-1 ring-gray-900/5 rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 4h-8m0 4h8M3 7l4 4L3 15"/>
+                            </svg>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">
+                                    Ortalama SEO Skoru
+                                </dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900">
+                                        {{ avg_seo_score }}
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toplam Medya -->
+            <div class="bg-white overflow-hidden shadow-sm ring-1 ring-gray-900/5 rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">
+                                    Toplam Medya
+                                </dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900">
+                                        {{ total_media }}
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grafik ve İçerik Listesi -->
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <!-- İçerik Üretim Grafiği -->
+            <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-lg">
+                <div class="p-6">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900">İçerik Üretim Trendi</h3>
+                    <div class="mt-2">
+                        <canvas id="contentTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Son İçerikler -->
+            <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-lg">
+                <div class="p-6">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900">Son İçerikler</h3>
+                    <div class="mt-2">
+                        <div class="flow-root">
+                            <ul class="-my-5 divide-y divide-gray-200">
+                                {% for content in recent_contents %}
+                                <li class="py-4">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-medium text-gray-900 truncate">
+                                                {{ content.title }}
+                                            </p>
+                                            <p class="text-sm text-gray-500">
+                                                {{ content.created_at|date:"d.m.Y" }}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <a href="{% url 'content_manager:content_detail' slug=content.slug %}" 
+                                               class="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-sm leading-5 font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50">
+                                                Görüntüle
+                                            </a>
+                                        </div>
+                                    </div>
+                                </li>
+                                {% empty %}
+                                <li class="py-4">
+                                    <p class="text-sm text-gray-500 text-center">Henüz içerik bulunmuyor.</p>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js kütüphanesi -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('contentTrendChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ dates|safe }},
+            datasets: [{
+                label: 'İçerik Sayısı',
+                data: {{ content_counts|safe }},
+                borderColor: 'rgb(79, 70, 229)',
+                backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                tension: 0.1,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

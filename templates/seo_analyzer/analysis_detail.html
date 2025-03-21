@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}SEO Analizi: {{ analysis.content.title }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+        <!-- Üst Başlık -->
+        <div class="md:flex md:items-center md:justify-between mb-6">
+            <div class="min-w-0 flex-1">
+                <nav class="flex" aria-label="Breadcrumb">
+                    <ol class="flex items-center space-x-4">
+                        <li>
+                            <a href="{% url 'seo_analyzer:dashboard' %}" class="text-gray-500 hover:text-gray-700">SEO Analizleri</a>
+                        </li>
+                        <li>
+                            <div class="flex items-center">
+                                <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="ml-4 text-gray-500">{{ analysis.content.title }}</span>
+                            </div>
+                        </li>
+                    </ol>
+                </nav>
+                <h2 class="mt-2 text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                    SEO Analizi
+                </h2>
+            </div>
+            <div class="mt-4 flex md:mt-0 md:ml-4">
+                <a href="{% url 'content_manager:content_detail' slug=analysis.content.slug %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    İçeriğe Git
+                </a>
+                <button type="button" onclick="runAnalysis()"
+                        class="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                    <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Yeniden Analiz Et
+                </button>
+            </div>
+        </div>
+
+        <!-- Genel Skor -->
+        <div class="bg-white overflow-hidden shadow-sm ring-1 ring-gray-900/5 rounded-lg mb-6">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="relative inline-flex">
+                            <div class="h-24 w-24 rounded-full bg-gray-100 flex items-center justify-center">
+                                <span class="text-3xl font-bold {% if analysis.score >= 80 %}text-green-600{% elif analysis.score >= 60 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                                    {{ analysis.score }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ml-6">
+                        <h3 class="text-lg font-medium leading-6 text-gray-900">Genel SEO Skoru</h3>
+                        <p class="mt-2 text-sm text-gray-500">
+                            {% if analysis.score >= 80 %}
+                                Mükemmel! İçeriğiniz SEO açısından oldukça iyi durumda.
+                            {% elif analysis.score >= 60 %}
+                                İyi! Bazı iyileştirmelerle daha iyi sonuçlar alabilirsiniz.
+                            {% else %}
+                                Geliştirilmeli. Önerilen iyileştirmeleri dikkate alın.
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Anahtar Kelime Analizleri -->
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-lg mb-6">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Anahtar Kelime Analizleri</h3>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {% for keyword_analysis in analysis.keywordanalysis_set.all %}
+                    <div class="border rounded-lg p-4">
+                        <h4 class="font-medium text-gray-900">{{ keyword_analysis.keyword }}</h4>
+                        <dl class="mt-2 grid grid-cols-2 gap-4">
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Kullanım</dt>
+                                <dd class="mt-1 text-lg font-semibold text-gray-900">{{ keyword_analysis.count }}x</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Yoğunluk</dt>
+                                <dd class="mt-1 text-lg font-semibold text-gray-900">{{ keyword_analysis.density|floatformat:1 }}%</dd>
+                            </div>
+                        </dl>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- SEO Metrikleri -->
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">SEO Metrikleri</h3>
+                <dl class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    <div class="px-4 py-5 bg-gray-50 shadow rounded-lg overflow-hidden sm:p-6">
+                        <dt class="text-sm font-medium text-gray-500 truncate">Başlık Uzunluğu</dt>
+                        <dd class="mt-1 text-3xl font-semibold text-gray-900">{{ analysis.meta_title_length }}</dd>
+                        <dd class="mt-2 text-sm text-gray-500">Önerilen: 50-60 karakter</dd>
+                    </div>
+
+                    <div class="px-4 py-5 bg-gray-50 shadow rounded-lg overflow-hidden sm:p-6">
+                        <dt class="text-sm font-medium text-gray-500 truncate">Meta Açıklama Uzunluğu</dt>
+                        <dd class="mt-1 text-3xl font-semibold text-gray-900">{{ analysis.meta_description_length }}</dd>
+                        <dd class="mt-2 text-sm text-gray-500">Önerilen: 150-160 karakter</dd>
+                    </div>
+
+                    <div class="px-4 py-5 bg-gray-50 shadow rounded-lg overflow-hidden sm:p-6">
+                        <dt class="text-sm font-medium text-gray-500 truncate">Kelime Sayısı</dt>
+                        <dd class="mt-1 text-3xl font-semibold text-gray-900">{{ analysis.word_count }}</dd>
+                        <dd class="mt-2 text-sm text-gray-500">Önerilen: En az 300 kelime</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function runAnalysis() {
+    fetch("{% url 'seo_analyzer:run_analysis' %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            content_id: '{{ analysis.content.id }}'
+        })
+    }).then(response => {
+        if (response.ok) {
+            window.location.reload();
+        }
+    });
+}
+</script>
+{% endblock %} 

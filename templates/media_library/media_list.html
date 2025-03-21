@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Medya Kütüphanesi - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+        <!-- Üst Başlık ve Butonlar -->
+        <div class="md:flex md:items-center md:justify-between mb-6">
+            <div class="min-w-0 flex-1">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                    Medya Kütüphanesi
+                </h2>
+                <p class="mt-1 text-sm text-gray-500">
+                    Tüm medya dosyalarınızı buradan yönetebilirsiniz
+                </p>
+            </div>
+            <div class="mt-4 flex md:mt-0 md:ml-4">
+                <a href="{% url 'media_library:media_upload' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Yeni Dosya Yükle
+                </a>
+            </div>
+        </div>
+
+        <!-- Filtreler -->
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-lg mb-6">
+            <div class="p-4">
+                <form method="get" class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div>
+                        <label for="type" class="block text-sm font-medium text-gray-700">Dosya Tipi</label>
+                        <select name="type" id="type" 
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                onchange="this.form.submit()">
+                            <option value="">Tümü</option>
+                            {% for value, label in file_types %}
+                                <option value="{{ value }}" {% if request.GET.type == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Medya Grid -->
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-lg">
+            <div class="p-4">
+                {% if media_files %}
+                <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                    {% for media in media_files %}
+                    <div class="group relative">
+                        <div class="aspect-w-10 aspect-h-7 block w-full overflow-hidden rounded-lg bg-gray-100">
+                            {% if media.is_image %}
+                                <img src="{{ media.file.url }}" alt="{{ media.title }}" 
+                                     class="object-cover pointer-events-none">
+                            {% else %}
+                                <div class="flex items-center justify-center h-full">
+                                    <img src="{{ media.thumbnail_url }}" alt="{{ media.title }}" 
+                                         class="w-16 h-16 object-contain">
+                                </div>
+                            {% endif %}
+                            <div class="flex items-end p-4 opacity-0 group-hover:opacity-100" aria-hidden="true">
+                                <div class="w-full bg-white bg-opacity-75 backdrop-blur-sm rounded-md p-2 flex justify-between">
+                                    <a href="{% url 'media_library:media_detail' pk=media.id %}" 
+                                       class="text-sm font-medium text-gray-900">Görüntüle</a>
+                                    <button type="button" onclick="deleteMedia({{ media.id }})"
+                                            class="text-sm font-medium text-red-600">Sil</button>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="mt-2 block text-sm font-medium text-gray-900 truncate">{{ media.title }}</p>
+                        <p class="block text-sm font-medium text-gray-500">{{ media.file_size_display }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Sayfalama -->
+                {% if is_paginated %}
+                <div class="mt-6 flex items-center justify-between border-t border-gray-200 pt-3">
+                    <div class="flex flex-1 justify-between sm:hidden">
+                        {% if page_obj.has_previous %}
+                            <a href="?page={{ page_obj.previous_page_number }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                Önceki
+                            </a>
+                        {% endif %}
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                Sonraki
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% else %}
+                <div class="text-center py-12">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">Medya Dosyası Yok</h3>
+                    <p class="mt-1 text-sm text-gray-500">Yeni dosya yükleyerek başlayın.</p>
+                    <div class="mt-6">
+                        <a href="{% url 'media_library:media_upload' %}" 
+                           class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                            <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Yeni Dosya Yükle
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function deleteMedia(id) {
+    if (confirm('Bu dosyayı silmek istediğinizden emin misiniz?')) {
+        fetch(`/media/${id}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+        }).then(response => {
+            if (response.ok) {
+                window.location.reload();
+            }
+        });
+    }
+}
+</script>
+{% endblock %} 

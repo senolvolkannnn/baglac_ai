@@ -1,0 +1,62 @@
+{% if content %}
+<div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl p-6">
+    <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Üretilen İçerik</h3>
+    
+    <div class="prose max-w-none">
+        {{ content|safe }}
+    </div>
+
+    <div class="mt-6 border-t border-gray-100 pt-6">
+        <h4 class="text-sm font-medium text-gray-900 mb-2">SEO Bilgileri</h4>
+        <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
+            <div class="sm:col-span-1">
+                <dt class="text-sm font-medium text-gray-500">SEO Başlığı</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ seo_title }}</dd>
+            </div>
+            <div class="sm:col-span-2">
+                <dt class="text-sm font-medium text-gray-500">Meta Açıklama</dt>
+                <dd class="mt-1 text-sm text-gray-900">{{ seo_description }}</dd>
+            </div>
+        </dl>
+    </div>
+
+    <div class="mt-6 flex justify-end space-x-4">
+        <button type="button" onclick="editContent()"
+                class="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+            Düzenle
+        </button>
+        <form method="post" action="{% url 'content_manager:content_save' %}">
+            {% csrf_token %}
+            <input type="hidden" name="content" value="{{ content|escape }}">
+            <input type="hidden" name="seo_title" value="{{ seo_title }}">
+            <input type="hidden" name="seo_description" value="{{ seo_description }}">
+            <input type="hidden" name="category" value="{{ category.id }}">
+            <button type="submit"
+                    class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                Kaydet
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+function editContent() {
+    const editor = document.createElement('div');
+    editor.innerHTML = `
+        <textarea id="content-editor" class="w-full h-96 p-4 border rounded-md">{{ content|escapejs }}</textarea>
+    `;
+    
+    // TinyMCE'yi başlat
+    tinymce.init({
+        selector: '#content-editor',
+        height: 500,
+        plugins: [
+            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+            'insertdatetime', 'media', 'table', 'help', 'wordcount'
+        ],
+        toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | help'
+    });
+}
+</script>
+{% endif %} 

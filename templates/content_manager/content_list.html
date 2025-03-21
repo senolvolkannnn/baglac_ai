@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}İçeriklerim - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+        <!-- Başlık ve Yeni İçerik Butonu -->
+        <div class="md:flex md:items-center md:justify-between mb-6">
+            <div class="min-w-0 flex-1">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                    İçeriklerim
+                </h2>
+            </div>
+            <div class="mt-4 flex md:ml-4 md:mt-0">
+                <a href="{% url 'content_manager:content_create' %}" 
+                   class="ml-3 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700">
+                    <svg class="-ml-0.5 mr-1.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"/>
+                    </svg>
+                    Yeni İçerik
+                </a>
+            </div>
+        </div>
+
+        <!-- Filtreler -->
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-lg mb-6">
+            <div class="p-4">
+                <form method="get" class="grid grid-cols-1 gap-4 sm:grid-cols-4">
+                    <div>
+                        <label for="category" class="block text-sm font-medium text-gray-700">Kategori</label>
+                        <select name="category" id="category" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            <option value="">Tümü</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700">Durum</label>
+                        <select name="status" id="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            <option value="">Tümü</option>
+                            <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>Taslak</option>
+                            <option value="published" {% if request.GET.status == 'published' %}selected{% endif %}>Yayında</option>
+                            <option value="archived" {% if request.GET.status == 'archived' %}selected{% endif %}>Arşivlenmiş</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="search" class="block text-sm font-medium text-gray-700">Arama</label>
+                        <input type="text" name="search" id="search" value="{{ request.GET.search }}"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                               placeholder="Başlık veya içerikte ara...">
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Filtrele
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- İçerik Listesi -->
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+            <ul role="list" class="divide-y divide-gray-200">
+                {% for content in contents %}
+                <li>
+                    <div class="px-4 py-4 sm:px-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1 min-w-0">
+                                <a href="{% url 'content_manager:content_detail' content.slug %}" class="block focus:outline-none">
+                                    <p class="text-sm font-medium text-indigo-600 truncate">{{ content.title }}</p>
+                                    <p class="mt-1 text-xs text-gray-500">
+                                        {{ content.created_at|date:"d.m.Y H:i" }}
+                                    </p>
+                                </a>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <!-- Durum Badge -->
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    {% if content.status == 'published' %}bg-green-100 text-green-800
+                                    {% elif content.status == 'draft' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ content.get_status_display }}
+                                </span>
+
+                                <!-- Düzenle Butonu -->
+                                <a href="{% url 'content_manager:content_detail' content.slug %}" 
+                                   class="inline-flex items-center p-2 text-gray-400 hover:text-gray-500">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="px-4 py-8 text-center text-gray-500">
+                    Henüz içerik oluşturmadınız.
+                    <a href="{% url 'content_manager:content_create' %}" class="text-indigo-600 hover:text-indigo-500">
+                        Hemen yeni bir içerik oluşturun
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Sayfalama -->
+        {% if is_paginated %}
+        <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-4">
+            <div class="flex-1 flex justify-between sm:hidden">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Önceki
+                    </a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Sonraki
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

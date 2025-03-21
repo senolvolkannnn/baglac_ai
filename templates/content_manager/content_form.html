@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}AI İçerik Oluştur - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Ana Form -->
+    <div class="max-w-4xl mx-auto py-6">
+        <div class="md:flex md:items-center md:justify-between mb-6">
+            <div class="min-w-0 flex-1">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                    AI İçerik Oluştur
+                </h2>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl">
+            <form method="post" class="p-6 space-y-6" id="contentForm" action="{% url 'content_manager:content_create' %}">
+                {% csrf_token %}
+                
+                <!-- Ana Başlık -->
+                <div>
+                    <label for="id_title" class="block text-sm font-medium leading-6 text-gray-900">
+                        Ana Başlık
+                    </label>
+                    <div class="mt-2">
+                        <input type="text" name="title" id="id_title" required
+                               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                               placeholder="İçeriğinizin ana başlığını girin">
+                    </div>
+                </div>
+
+                <!-- Alt Başlıklar -->
+                <div>
+                    <label class="block text-sm font-medium leading-6 text-gray-900">
+                        Alt Başlıklar
+                    </label>
+                    <div class="mt-2 space-y-4" id="subtitles-container">
+                        <!-- H2 Başlık Grubu -->
+                        <div class="h2-group space-y-2">
+                            <div class="flex gap-2">
+                                <input type="text" name="subtitles[]"
+                                       class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                       placeholder="H2 başlık ekleyin">
+                                <button type="button" onclick="addH3Title(this.closest('.h2-group'))"
+                                        class="rounded-md bg-green-50 p-2 text-green-600 hover:bg-green-100"
+                                        title="H3 Alt Başlık Ekle">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                </button>
+                                <button type="button" onclick="removeH2Group(this.closest('.h2-group'))"
+                                        class="rounded-md bg-red-50 p-2 text-red-600 hover:bg-red-100">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="h3-container pl-6 space-y-2">
+                                <!-- H3 başlıklar buraya eklenecek -->
+                            </div>
+                        </div>
+
+                        <!-- H2 Başlık Ekleme Butonu -->
+                        <div class="flex justify-center">
+                            <button type="button" onclick="addH2Title()"
+                                    class="rounded-md bg-indigo-50 px-4 py-2 text-indigo-600 hover:bg-indigo-100 flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                </svg>
+                                <span>Yeni H2 Başlık Ekle</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Anahtar Kelimeler -->
+                <div>
+                    <label for="id_keywords" class="block text-sm font-medium leading-6 text-gray-900">
+                        Anahtar Kelimeler
+                    </label>
+                    <div class="mt-2">
+                        <input type="text" name="keywords" id="id_keywords" required
+                               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                               placeholder="Anahtar kelimeleri virgülle ayırarak yazın (max 200 karakter)"
+                               maxlength="200">
+                        <p class="mt-1 text-sm text-gray-500">Örnek: yapay zeka, makine öğrenmesi</p>
+                    </div>
+                </div>
+
+                <!-- İçerik Tonu -->
+                <div>
+                    <label class="block text-sm font-medium leading-6 text-gray-900">İçerik Tonu</label>
+                    <div class="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="relative flex items-start">
+                            <div class="flex items-center h-6">
+                                <input type="radio" name="tone" value="professional" checked
+                                       class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600">
+                            </div>
+                            <div class="ml-3">
+                                <label class="text-sm font-medium leading-6 text-gray-900">Profesyonel</label>
+                            </div>
+                        </div>
+                        <div class="relative flex items-start">
+                            <div class="flex items-center h-6">
+                                <input type="radio" name="tone" value="casual"
+                                       class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600">
+                            </div>
+                            <div class="ml-3">
+                                <label class="text-sm font-medium leading-6 text-gray-900">Gündelik</label>
+                            </div>
+                        </div>
+                        <div class="relative flex items-start">
+                            <div class="flex items-center h-6">
+                                <input type="radio" name="tone" value="academic"
+                                       class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600">
+                            </div>
+                            <div class="ml-3">
+                                <label class="text-sm font-medium leading-6 text-gray-900">Akademik</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- İçerik Uzunluğu -->
+                <div>
+                    <label class="block text-sm font-medium leading-6 text-gray-900">İçerik Uzunluğu</label>
+                    <div class="mt-2">
+                        <select name="length" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                            <option value="short">Kısa (~500 kelime)</option>
+                            <option value="medium" selected>Orta (~1000 kelime)</option>
+                            <option value="long">Uzun (~2000 kelime)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- İçerik Tipi -->
+                <div>
+                    <label class="block text-sm font-medium leading-6 text-gray-900">İçerik Tipi</label>
+                    <div class="mt-2">
+                        <select name="content_type" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                            <option value="blog">Blog Yazısı</option>
+                            <option value="category">Kategori İçeriği</option>
+                            <option value="product">Ürün İçeriği</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- İçerik Durumu -->
+                <div class="mb-4">
+                    <label for="status" class="block text-sm font-medium text-gray-700">İçerik Durumu</label>
+                    <select name="status" id="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="draft">Taslak</option>
+                        <option value="published">Yayınlanmış</option>
+                    </select>
+                </div>
+
+                <!-- Butonlar -->
+                <div class="flex justify-end gap-4">
+                    <button type="button" onclick="window.history.back()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        İptal
+                    </button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        İçerik Oluştur
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function addH2Title() {
+    const container = document.getElementById('subtitles-container');
+    const h2Group = document.createElement('div');
+    h2Group.className = 'h2-group space-y-2';
+    h2Group.innerHTML = `
+        <div class="flex gap-2">
+            <input type="text" name="subtitles[]"
+                   class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                   placeholder="H2 başlık ekleyin">
+            <button type="button" onclick="addH3Title(this.closest('.h2-group'))"
+                    class="rounded-md bg-green-50 p-2 text-green-600 hover:bg-green-100"
+                    title="H3 Alt Başlık Ekle">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+            </button>
+            <button type="button" onclick="removeH2Group(this.closest('.h2-group'))"
+                    class="rounded-md bg-red-50 p-2 text-red-600 hover:bg-red-100">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="h3-container pl-6 space-y-2">
+            <!-- H3 başlıklar buraya eklenecek -->
+        </div>
+    `;
+    container.insertBefore(h2Group, container.lastElementChild);
+}
+
+function addH3Title(h2Group) {
+    const h3Container = h2Group.querySelector('.h3-container');
+    const h3Input = document.createElement('div');
+    h3Input.className = 'flex gap-2';
+    h3Input.innerHTML = `
+        <input type="text" name="h3_titles[]"
+               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+               placeholder="H3 alt başlık ekleyin">
+        <button type="button" onclick="this.parentElement.remove()"
+                class="rounded-md bg-red-50 p-2 text-red-600 hover:bg-red-100">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    `;
+    h3Container.appendChild(h3Input);
+}
+
+function removeH2Group(h2Group) {
+    if (confirm('Bu başlığı ve altındaki tüm alt başlıkları silmek istediğinize emin misiniz?')) {
+        h2Group.remove();
+    }
+}
+
+document.getElementById('contentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Form verilerini kontrol et
+    const keywords = document.getElementById('id_keywords').value;
+    if (keywords.length > 200) {
+        alert('Anahtar kelimeler 200 karakterden uzun olamaz');
+        return;
+    }
+
+    // Başlık yapısını oluştur
+    const headingStructure = [];
+    const h2Groups = document.querySelectorAll('.h2-group');
+    
+    h2Groups.forEach(h2Group => {
+        const h2Input = h2Group.querySelector('input[name="subtitles[]"]');
+        if (h2Input && h2Input.value.trim()) {
+            const h3Inputs = h2Group.querySelectorAll('.h3-container input[name="h3_titles[]"]');
+            const h3Titles = Array.from(h3Inputs)
+                .map(input => input.value.trim())
+                .filter(Boolean);
+
+            headingStructure.push({
+                h2: h2Input.value.trim(),
+                h3s: h3Titles
+            });
+        }
+    });
+    
+    // Mevcut heading_structure inputu kontrol et
+    let headingInput = document.querySelector('input[name="heading_structure"]');
+    
+    // Yoksa oluştur
+    if (!headingInput) {
+        headingInput = document.createElement('input');
+        headingInput.type = 'hidden';
+        headingInput.name = 'heading_structure';
+        this.appendChild(headingInput);
+    }
+    
+    // Değeri ayarla
+    headingInput.value = JSON.stringify(headingStructure);
+    
+    // Form verilerini kontrol et
+    console.log('Heading structure:', headingInput.value);
+    
+    // Formu gönder
+    this.submit();
+});
+</script>
+{% endblock %} 

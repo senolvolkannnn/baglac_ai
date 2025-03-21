@@ -1,0 +1,99 @@
+.content-body {
+    line-height: 1.6;
+    font-size: 16px;
+    color: #374151;
+}
+
+.content-body p {
+    margin-bottom: 1.5em;
+    text-align: justify;
+}
+
+.content-body h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #111827;
+    margin-top: 2.5rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 2px solid #E5E7EB;
+    padding-bottom: 0.5rem;
+}
+
+.content-body ul, .content-body ol {
+    margin: 1.5em 0;
+    padding-left: 2.5em;
+}
+
+.content-body ul {
+    list-style-type: disc;
+}
+
+.content-body ol {
+    list-style-type: decimal;
+}
+
+.content-body li {
+    margin-bottom: 0.75em;
+    line-height: 1.6;
+    position: relative;
+}
+
+.content-body li::marker {
+    color: #6B7280;
+}
+
+.content-body table {
+    width: 100%;
+    margin: 1.5em 0;
+    border-collapse: collapse;
+    background-color: white;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.content-body table th {
+    background-color: #F3F4F6;
+    font-weight: 600;
+    text-align: left;
+    padding: 1rem;
+    border-bottom: 2px solid #E5E7EB;
+}
+
+.content-body table td {
+    padding: 1rem;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.content-body table tr:last-child td {
+    border-bottom: none;
+}
+
+.content-body table tr:hover {
+    background-color: #F9FAFB;
+}
+
+/* Özel boşluklar ve ayırıcılar */
+.content-body > *:first-child {
+    margin-top: 0;
+}
+
+.content-body > *:last-child {
+    margin-bottom: 0;
+}
+
+/* Mobil responsive düzenlemeler */
+@media (max-width: 640px) {
+    .content-body {
+        font-size: 15px;
+    }
+    
+    .content-body h2 {
+        font-size: 1.5rem;
+    }
+    
+    .content-body table {
+        display: block;
+        overflow-x: auto;
+    }
+} 

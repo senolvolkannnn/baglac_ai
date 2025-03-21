@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}SEO Analizleri - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+        <!-- Üst Başlık -->
+        <div class="md:flex md:items-center md:justify-between mb-6">
+            <div class="min-w-0 flex-1">
+                <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                    SEO Analizleri
+                </h2>
+                <p class="mt-1 text-sm text-gray-500">
+                    İçeriklerinizin SEO performansını takip edin
+                </p>
+            </div>
+        </div>
+
+        <!-- Analiz Kartları -->
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {% for analysis in analyses %}
+            <div class="bg-white overflow-hidden shadow-sm ring-1 ring-gray-900/5 rounded-lg">
+                <div class="p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <!-- SEO Skoru Göstergesi -->
+                            <div class="relative inline-flex">
+                                <div class="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center">
+                                    <span class="text-xl font-bold {% if analysis.score >= 80 %}text-green-600{% elif analysis.score >= 60 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                                        {{ analysis.score }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ml-5">
+                            <h3 class="text-lg font-medium leading-6 text-gray-900 truncate">
+                                {{ analysis.content.title }}
+                            </h3>
+                            <div class="mt-1 flex items-center text-sm text-gray-500">
+                                <span>{{ analysis.content.category.name }}</span>
+                                <span class="mx-2">•</span>
+                                <span>{{ analysis.created_at|date:"d.m.Y" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- SEO Metrikleri -->
+                    <div class="mt-6 grid grid-cols-2 gap-4">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Anahtar Kelime Yoğunluğu</dt>
+                            <dd class="mt-1 text-lg font-semibold text-gray-900">{{ analysis.keyword_density }}%</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Meta Başlık Uzunluğu</dt>
+                            <dd class="mt-1 text-lg font-semibold text-gray-900">{{ analysis.meta_title_length }}</dd>
+                        </div>
+                    </div>
+
+                    <!-- Detay Butonu -->
+                    <div class="mt-6">
+                        <a href="{% url 'seo_analyzer:analysis_detail' content_id=analysis.content.id %}" 
+                           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 w-full justify-center">
+                            Detaylı Analiz
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full">
+                <div class="text-center py-12 bg-white shadow-sm ring-1 ring-gray-900/5 rounded-lg">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">Analiz Bulunamadı</h3>
+                    <p class="mt-1 text-sm text-gray-500">Henüz hiçbir içerik analiz edilmemiş.</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Sayfalama -->
+        {% if is_paginated %}
+        <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-6">
+            <div class="flex-1 flex justify-between sm:hidden">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Önceki
+                    </a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Sonraki
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

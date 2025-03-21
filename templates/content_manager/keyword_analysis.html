@@ -1,0 +1,662 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Anahtar Kelime Analizi - {{ block.super }}{% endblock %}
+
+{% block content %}
+{% if error %}
+<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+    <p class="font-bold">Hata</p>
+    <p>{{ error }}</p>
+</div>
+{% endif %}
+
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+        <h1 class="text-2xl font-semibold text-gray-900">Anahtar Kelime Analizi</h1>
+        
+        <!-- Arama Formu -->
+        <div class="mt-6">
+            <div class="max-w-xl">
+                {% csrf_token %}
+                <label for="keyword" class="block text-sm font-medium text-gray-700">
+                    Anahtar Kelime
+                </label>
+                <div class="mt-1 flex rounded-md shadow-sm">
+                    <input type="text" name="keyword" id="keyword"
+                           class="flex-1 min-w-0 block w-full px-3 py-2 rounded-l-md border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                           placeholder="Analiz etmek istediğiniz anahtar kelimeyi girin">
+                    <button type="button" onclick="analyzeKeyword()"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-r-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Analiz Et
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sonuçlar -->
+        <div id="results" class="mt-8 hidden">
+            <!-- Temel Metrikler -->
+            <div class="mb-8">
+                <h2 class="text-lg font-medium text-gray-900 mb-4">Temel Metrikler</h2>
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                    <!-- Arama Hacmi -->
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="p-5">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Arama Hacmi</dt>
+                                    <dd class="mt-1 text-3xl font-semibold text-gray-900" id="searchVolume">-</dd>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CPC -->
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="p-5">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dt class="text-sm font-medium text-gray-500 truncate">CPC</dt>
+                                    <dd class="mt-1 text-3xl font-semibold text-gray-900" id="cpc">-</dd>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rekabet -->
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="p-5">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Rekabet</dt>
+                                    <dd class="mt-1 text-3xl font-semibold text-gray-900" id="competition">-</dd>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sonuç Sayısı -->
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="p-5">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Sonuç Sayısı</dt>
+                                    <dd class="mt-1 text-3xl font-semibold text-gray-900" id="results_count">-</dd>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trend Grafiği -->
+            <div class="bg-white overflow-hidden shadow rounded-lg mb-8">
+                <div class="p-5">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Trend Analizi</h3>
+                    <div class="w-full h-64">
+                        <canvas id="trendChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- İlgili Kelimeler -->
+            <div class="bg-white overflow-hidden shadow rounded-lg mb-8">
+                <div class="p-5">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">İlgili Kelimeler</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelime</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hacim</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPC</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rekabet</th>
+                                </tr>
+                            </thead>
+                            <tbody id="relatedKeywords" class="bg-white divide-y divide-gray-200">
+                                <!-- JavaScript ile doldurulacak -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SERP Sonuçları -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">SERP Sonuçları</h3>
+                    <div id="serpResults" class="space-y-4">
+                        <!-- JavaScript ile doldurulacak -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- İçerik Optimizasyonu -->
+            <div class="bg-white overflow-hidden shadow rounded-lg mb-8">
+                <div class="p-5">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">İçerik Optimizasyonu İçin Anahtar Kelimeler</h3>
+                    
+                    <!-- Ana Konular -->
+                    <div class="mb-6">
+                        <h4 class="text-sm font-medium text-gray-700 mb-2">
+                            Ana Konular
+                            <span class="text-xs text-gray-500">(Yüksek hacimli ve alakalı)</span>
+                        </h4>
+                        <div id="primaryKeywords" class="flex flex-wrap gap-2">
+                            <!-- JavaScript ile doldurulacak -->
+                        </div>
+                    </div>
+                    
+                    <!-- Destekleyici Konular -->
+                    <div class="mb-6">
+                        <h4 class="text-sm font-medium text-gray-700 mb-2">
+                            Destekleyici Konular
+                            <span class="text-xs text-gray-500">(Orta hacimli)</span>
+                        </h4>
+                        <div id="secondaryKeywords" class="flex flex-wrap gap-2">
+                            <!-- JavaScript ile doldurulacak -->
+                        </div>
+                    </div>
+
+                    <!-- Spesifik Sorular/Konular -->
+                    <div class="mb-6">
+                        <h4 class="text-sm font-medium text-gray-700 mb-2">
+                            Spesifik Sorular/Konular
+                            <span class="text-xs text-gray-500">(Long tail)</span>
+                        </h4>
+                        <div id="longTailKeywords" class="flex flex-wrap gap-2">
+                            <!-- JavaScript ile doldurulacak -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if error_message %}
+<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+    <strong class="font-bold">Hata!</strong>
+    <span class="block sm:inline">{{ error_message }}</span>
+</div>
+{% endif %}
+
+{% if results %}
+<div class="bg-white shadow rounded-lg p-6">
+    <h2 class="text-xl font-bold mb-4">{{ results.keyword }}</h2>
+    
+    <!-- Ana Metrikler -->
+    <div class="grid grid-cols-4 gap-4 mb-6">
+        <div class="p-4 bg-gray-50 rounded">
+            <div class="text-sm text-gray-500">Arama Hacmi</div>
+            <div class="text-xl font-bold">{{ results.data.volume|default:"0"|intcomma }}</div>
+        </div>
+        <div class="p-4 bg-gray-50 rounded">
+            <div class="text-sm text-gray-500">CPC</div>
+            <div class="text-xl font-bold">{{ results.data.cpc|default:"0"|floatformat:2 }} ₺</div>
+        </div>
+        <div class="p-4 bg-gray-50 rounded">
+            <div class="text-sm text-gray-500">Rekabet</div>
+            <div class="text-xl font-bold">{{ results.data.competition|default:"0"|floatformat:2 }}</div>
+        </div>
+        <div class="p-4 bg-gray-50 rounded">
+            <div class="text-sm text-gray-500">Sonuç Sayısı</div>
+            <div class="text-xl font-bold">{{ results.data.results|default:"0"|intcomma }}</div>
+        </div>
+    </div>
+    
+    <!-- İlgili Anahtar Kelimeler -->
+    {% if results.related_keywords %}
+    <div class="mt-6">
+        <h3 class="text-lg font-semibold mb-3">İlgili Anahtar Kelimeler</h3>
+        <div class="grid grid-cols-1 gap-2">
+            {% for keyword in results.related_keywords %}
+            <div class="p-3 bg-gray-50 rounded flex justify-between items-center">
+                <span>{{ keyword.keyword }}</span>
+                <span class="text-gray-600">{{ keyword.volume }} arama/ay</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Yardımcı fonksiyonlar
+function formatNumber(num) {
+    return new Intl.NumberFormat('tr-TR').format(num || 0);
+}
+
+function formatCurrency(num) {
+    return new Intl.NumberFormat('tr-TR', { 
+        style: 'currency', 
+        currency: 'TRY',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2 
+    }).format(num || 0);
+}
+
+function formatPercentage(num) {
+    return new Intl.NumberFormat('tr-TR', { 
+        style: 'percent',
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1 
+    }).format(num || 0);
+}
+
+// Ana analiz fonksiyonu
+function analyzeKeyword() {
+    const keyword = document.getElementById('keyword').value;
+    if (!keyword) {
+        alert('Lütfen bir anahtar kelime girin');
+        return;
+    }
+
+    // Yükleniyor durumunu göster
+    const results = document.getElementById('results');
+    results.classList.remove('hidden');
+    
+    // Yükleniyor animasyonlarını göster
+    document.getElementById('searchVolume').innerHTML = '<div class="animate-pulse">Yükleniyor...</div>';
+    document.getElementById('cpc').innerHTML = '<div class="animate-pulse">Yükleniyor...</div>';
+    document.getElementById('competition').innerHTML = '<div class="animate-pulse">Yükleniyor...</div>';
+    document.getElementById('results_count').innerHTML = '<div class="animate-pulse">Yükleniyor...</div>';
+
+    // API isteği
+    fetch('/content/keywords/analyze/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({ keyword: keyword })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('API Yanıtı:', data);
+
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        // Arama hacmini global değişkende sakla
+        window.currentVolume = data.volume;
+
+        // Temel metrikleri güncelle
+        document.getElementById('searchVolume').textContent = formatNumber(data.volume);
+        document.getElementById('cpc').textContent = formatCurrency(data.cpc);
+        document.getElementById('competition').textContent = formatPercentage(data.competition);
+        document.getElementById('results_count').textContent = formatNumber(data.results);
+
+        // Trend grafiğini güncelle
+        if (data.trend && data.trend.raw) {
+            updateTrendChart(data.trend, data.volume);
+        }
+
+        // İlgili kelimeleri güncelle
+        if (data.related_keywords && data.related_keywords.length > 0) {
+            updateRelatedKeywords(data.related_keywords);
+        }
+
+        // SERP sonuçlarını güncelle
+        if (data.competitors && data.competitors.length > 0) {
+            updateSerpResults(data.competitors);
+        }
+
+        // İçerik optimizasyonu bölümünü güncelle
+        if (data.content_optimization) {
+            updateContentOptimization(data);
+        }
+    })
+    .catch(error => {
+        console.error('Hata:', error);
+        alert('Analiz sırasında bir hata oluştu: ' + error.message);
+        
+        // Hata durumunda yükleniyor mesajlarını temizle
+        document.getElementById('searchVolume').textContent = '-';
+        document.getElementById('cpc').textContent = '-';
+        document.getElementById('competition').textContent = '-';
+        document.getElementById('results_count').textContent = '-';
+    });
+}
+
+// Trend grafiği güncelleme
+function updateTrendChart(trendData, baseVolume) {
+    try {
+        const ctx = document.getElementById('trendChart');
+        const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 
+                       'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+        
+        if (window.trendChart && typeof window.trendChart.destroy === 'function') {
+            window.trendChart.destroy();
+        }
+
+        // Trend verilerini arama hacmine göre hesapla
+        const values = trendData.raw.split(',').map(ratio => {
+            const monthlyVolume = Math.round(parseFloat(ratio) * baseVolume);
+            return monthlyVolume;
+        });
+
+        window.trendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'Aylık Arama Hacmi',
+                    data: values,
+                    borderColor: 'rgb(79, 70, 229)',
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Arama Hacmi: ${formatNumber(context.raw)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: value => formatNumber(value)
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Trend grafiği oluşturulurken hata:', error);
+        const chartContainer = document.getElementById('trendChart').parentElement;
+        chartContainer.innerHTML = '<p class="text-red-600">Trend grafiği yüklenemedi</p>';
+    }
+}
+
+// İlgili kelimeler tablosunu güncelleme
+function updateRelatedKeywords(keywords) {
+    console.log('İlgili Kelimeler:', keywords);
+    const tbody = document.getElementById('relatedKeywords');
+    if (!keywords || keywords.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                    İlgili kelime bulunamadı
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = keywords.map(kw => `
+        <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                ${kw.keyword}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${formatNumber(kw.volume)}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${formatCurrency(kw.cpc)}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${formatPercentage(kw.competition)}
+            </td>
+        </tr>
+    `).join('');
+}
+
+// SERP sonuçlarını güncelleme
+function updateSerpResults(competitors) {
+    console.log('SERP Sonuçları:', competitors);
+    const container = document.getElementById('serpResults');
+    if (!competitors || competitors.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-gray-500 py-4">
+                SERP sonucu bulunamadı
+            </div>
+        `;
+        return;
+    }
+
+    // SERP özelliklerini Türkçe'ye çevir
+    const featureTranslations = {
+        '1': 'Featured Snippet',
+        '2': 'Sitelinks',
+        '3': 'Knowledge Graph',
+        '4': 'Reviews',
+        '5': 'Video',
+        '6': 'Image Pack',
+        '7': 'News',
+        '8': 'Shopping',
+        '9': 'Related Questions',
+        '13': 'Local Pack',
+        '14': 'Top Stories',
+        '15': 'Twitter',
+        '21': 'Featured Snippet (Image)',
+        '36': 'Rich Snippet'
+    };
+
+    container.innerHTML = competitors.map((comp, index) => `
+        <div class="flex items-center p-4 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} rounded-lg hover:bg-gray-100">
+            <div class="flex-shrink-0 text-2xl font-bold text-gray-400 w-12">
+                ${index + 1}
+            </div>
+            <div class="ml-4 flex-1">
+                <h4 class="text-sm font-medium text-gray-900">
+                    <a href="${comp.url}" target="_blank" class="hover:text-indigo-600">
+                        ${comp.domain}
+                    </a>
+                </h4>
+                <p class="mt-1 text-sm text-gray-500 truncate">
+                    ${comp.url}
+                </p>
+            </div>
+            <div class="ml-4 flex-shrink-0">
+                ${comp.serp_features ? `
+                    <div class="flex flex-wrap gap-2">
+                        ${comp.serp_features.map(feature => `
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800" 
+                                  title="${featureTranslations[feature] || feature}">
+                                ${featureTranslations[feature] || feature}
+                            </span>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+// İçerik optimizasyonu bölümünü güncelleme
+function updateContentOptimization(data) {
+    const categories = data.content_optimization;
+    
+    // Ana konuları güncelle
+    const primaryContainer = document.getElementById('primaryKeywords');
+    if (categories.primary_keywords && categories.primary_keywords.length > 0) {
+        primaryContainer.innerHTML = categories.primary_keywords.map(kw => `
+            <div class="inline-flex items-center px-3 py-1.5 rounded-full text-sm bg-indigo-100 text-indigo-800 group relative">
+                <span class="font-medium">${kw.keyword}</span>
+                <span class="ml-2 text-xs text-indigo-600 border-l border-indigo-200 pl-2">
+                    ${formatNumber(kw.volume)}/ay
+                </span>
+                <div class="hidden group-hover:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap">
+                    Alaka: ${formatPercentage(kw.relevance)}
+                </div>
+            </div>
+        `).join('');
+    } else {
+        primaryContainer.innerHTML = '<p class="text-sm text-gray-500">Ana konu bulunamadı</p>';
+    }
+    
+    // Destekleyici konuları güncelle
+    const secondaryContainer = document.getElementById('secondaryKeywords');
+    if (categories.secondary_keywords && categories.secondary_keywords.length > 0) {
+        secondaryContainer.innerHTML = categories.secondary_keywords.map(kw => `
+            <div class="inline-flex items-center px-3 py-1.5 rounded-full text-sm bg-green-100 text-green-800 group relative">
+                <span class="font-medium">${kw.keyword}</span>
+                <span class="ml-2 text-xs text-green-600 border-l border-green-200 pl-2">
+                    ${formatNumber(kw.volume)}/ay
+                </span>
+                <div class="hidden group-hover:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap">
+                    Alaka: ${formatPercentage(kw.relevance)}
+                </div>
+            </div>
+        `).join('');
+    } else {
+        secondaryContainer.innerHTML = '<p class="text-sm text-gray-500">Destekleyici konu bulunamadı</p>';
+    }
+    
+    // Long tail konuları güncelle
+    const longTailContainer = document.getElementById('longTailKeywords');
+    if (categories.long_tail_keywords && categories.long_tail_keywords.length > 0) {
+        longTailContainer.innerHTML = categories.long_tail_keywords.map(kw => `
+            <div class="inline-flex items-center px-3 py-1.5 rounded-full text-sm bg-yellow-100 text-yellow-800 group relative">
+                <span class="font-medium">${kw.keyword}</span>
+                <span class="ml-2 text-xs text-yellow-600 border-l border-yellow-200 pl-2">
+                    ${formatNumber(kw.volume)}/ay
+                </span>
+                <div class="hidden group-hover:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap">
+                    Alaka: ${formatPercentage(kw.relevance)}
+                </div>
+            </div>
+        `).join('');
+    } else {
+        longTailContainer.innerHTML = '<p class="text-sm text-gray-500">Spesifik soru/konu bulunamadı</p>';
+    }
+}
+</script>
+
+<!-- Progress göstergesi -->
+<div id="loadingIndicator" class="hidden fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white p-8 rounded-lg w-96">
+        <div class="mb-4">
+            <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                <div id="progressBar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+        <p id="progressMessage" class="text-center text-gray-700 font-medium mb-2">İçerik hazırlanıyor...</p>
+        <p id="progressStage" class="text-center text-sm text-gray-500"></p>
+    </div>
+</div>
+
+<!-- Form -->
+<form id="generateContentForm" method="post">
+    <!-- ... mevcut form içeriği ... -->
+    <button id="submitButton" type="submit" class="btn btn-primary">
+        İçerik Oluştur
+    </button>
+</form>
+
+{% block extra_js %}
+<script>
+document.getElementById('generateContentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const progressMessage = document.getElementById('progressMessage');
+    const submitButton = document.getElementById('submitButton');
+    
+    // UI'ı hazırla
+    loadingIndicator.classList.remove('hidden');
+    submitButton.disabled = true;
+    
+    // İçerik oluşturma isteği
+    fetch('/content/create/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            prompt: document.getElementById('contentPrompt').value
+        })
+    })
+    .then(response => {
+        // Progress güncellemelerini kontrol et
+        if (response.headers.get('X-Progress-Update')) {
+            const progress = response.json();
+            updateProgress(progress.stage, progress.message);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === 'success') {
+            document.getElementById('generatedContent').value = data.content;
+            showSuccess('İçerik başarıyla oluşturuldu!');
+        } else {
+            showError(data.message || 'İçerik oluşturma başarısız');
+        }
+    })
+    .catch(error => {
+        showError('Bir hata oluştu: ' + error.message);
+    })
+    .finally(() => {
+        loadingIndicator.classList.add('hidden');
+        submitButton.disabled = false;
+    });
+});
+
+function updateProgress(stage, message) {
+    const progressBar = document.getElementById('progressBar');
+    const progressMessage = document.getElementById('progressMessage');
+    const progressStage = document.getElementById('progressStage');
+    
+    if (stage === 'draft_started') {
+        progressBar.style.width = '50%';
+        progressMessage.textContent = 'GPT-4 ile Taslak Oluşturuluyor';
+        progressStage.textContent = 'Aşama 1/2: İçerik taslağı hazırlanıyor...';
+    } else if (stage === 'enhancement_started') {
+        progressBar.style.width = '75%';
+        progressMessage.textContent = 'Claude-3 ile Detaylandırılıyor';
+        progressStage.textContent = 'Aşama 2/2: İçerik geliştiriliyor...';
+    }
+}
+</script>
+{% endblock %}
+{% endblock %} 

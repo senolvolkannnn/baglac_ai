@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}AI İçerik Üret - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-6">
+    <div class="md:flex md:items-center md:justify-between mb-6">
+        <div class="min-w-0 flex-1">
+            <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+                AI ile İçerik Üret
+            </h2>
+        </div>
+    </div>
+
+    <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl">
+        <form method="post" class="p-6 space-y-6" id="generateForm" hx-post="{% url 'content_manager:generate_content' %}" hx-target="#generatedContent">
+            {% csrf_token %}
+            
+            <!-- Konu/Başlık -->
+            <div>
+                <label for="id_topic" class="block text-sm font-medium leading-6 text-gray-900">
+                    Konu/Başlık
+                </label>
+                <div class="mt-2">
+                    <input type="text" name="topic" id="id_topic" required
+                           class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                           placeholder="İçerik konusunu veya başlığını girin">
+                </div>
+            </div>
+
+            <!-- Anahtar Kelimeler -->
+            <div>
+                <label for="id_keywords" class="block text-sm font-medium leading-6 text-gray-900">
+                    Anahtar Kelimeler
+                </label>
+                <div class="mt-2">
+                    <input type="text" name="keywords" id="id_keywords" required
+                           class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                           placeholder="Anahtar kelimeleri virgülle ayırarak yazın">
+                </div>
+            </div>
+
+            <!-- İçerik Tonu -->
+            <div>
+                <label class="block text-sm font-medium leading-6 text-gray-900">İçerik Tonu</label>
+                <div class="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="relative flex items-start">
+                        <div class="flex items-center h-6">
+                            <input type="radio" name="tone" value="professional" checked
+                                   class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600">
+                        </div>
+                        <div class="ml-3">
+                            <label class="text-sm font-medium leading-6 text-gray-900">Profesyonel</label>
+                            <p class="text-sm text-gray-500">Resmi ve kurumsal bir dil</p>
+                        </div>
+                    </div>
+                    <div class="relative flex items-start">
+                        <div class="flex items-center h-6">
+                            <input type="radio" name="tone" value="casual"
+                                   class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600">
+                        </div>
+                        <div class="ml-3">
+                            <label class="text-sm font-medium leading-6 text-gray-900">Gündelik</label>
+                            <p class="text-sm text-gray-500">Samimi ve sohbet tarzı</p>
+                        </div>
+                    </div>
+                    <div class="relative flex items-start">
+                        <div class="flex items-center h-6">
+                            <input type="radio" name="tone" value="academic"
+                                   class="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600">
+                        </div>
+                        <div class="ml-3">
+                            <label class="text-sm font-medium leading-6 text-gray-900">Akademik</label>
+                            <p class="text-sm text-gray-500">Bilimsel ve teknik dil</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- İçerik Uzunluğu -->
+            <div>
+                <label class="block text-sm font-medium leading-6 text-gray-900">İçerik Uzunluğu</label>
+                <div class="mt-2">
+                    <select name="length" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                        <option value="short">Kısa (~500 kelime)</option>
+                        <option value="medium" selected>Orta (~1000 kelime)</option>
+                        <option value="long">Uzun (~2000 kelime)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Butonlar -->
+            <div class="flex justify-end space-x-4 pt-6 border-t border-gray-100">
+                <button type="button" onclick="history.back()"
+                        class="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                    İptal
+                </button>
+                <button type="submit"
+                        class="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                    İçerik Üret
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Üretilen İçerik -->
+    <div id="generatedContent" class="mt-8"></div>
+
+    <!-- Üretilen İçerik Bölümü -->
+    {% if generated_content %}
+    <div class="mt-8 bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl p-6">
+        <h2 class="text-xl font-semibold mb-4">Üretilen İçerik</h2>
+        <div class="prose max-w-none">
+            {{ generated_content|linebreaks }}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+    document.body.addEventListener('htmx:afterRequest', function(evt) {
+        if (evt.detail.successful) {
+            // İçerik üretildiğinde scroll
+            const generatedContent = document.getElementById('generatedContent');
+            generatedContent.scrollIntoView({ behavior: 'smooth' });
+        }
+    });
+</script>
+{% endblock %}
+
+{% endblock %} 

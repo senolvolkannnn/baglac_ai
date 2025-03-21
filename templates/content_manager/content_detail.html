@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ content.title }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Üst Bilgi ve Butonlar -->
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <nav class="flex mb-2" aria-label="Breadcrumb">
+                <ol class="flex items-center space-x-4">
+                    <li>
+                        <a href="{% url 'content_manager:content_list' %}" class="text-gray-500 hover:text-gray-700">İçeriklerim</a>
+                    </li>
+                    <li>
+                        <div class="flex items-center">
+                            <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="ml-4 text-gray-500">{{ content.title }}</span>
+                        </div>
+                    </li>
+                </ol>
+            </nav>
+            <div class="flex items-center space-x-4">
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium 
+                    {% if content.status == 'published' %}bg-green-100 text-green-800
+                    {% elif content.status == 'draft' %}bg-yellow-100 text-yellow-800
+                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                    {{ content.get_status_display }}
+                </span>
+                <span class="text-sm text-gray-500">{{ content.created_at|date:"d.m.Y H:i" }}</span>
+            </div>
+        </div>
+        <div class="flex space-x-3">
+            <button type="button" onclick="changeStatus('{{ content.slug }}')"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                {% if content.status == 'draft' %}
+                    Yayınla
+                {% elif content.status == 'published' %}
+                    Taslağa Al
+                {% else %}
+                    Arşivden Çıkar
+                {% endif %}
+            </button>
+            {% if content.status == 'draft' %}
+                <a href="{% url 'content_manager:content_edit' content.slug %}"
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    Düzenle
+                </a>
+            {% endif %}
+            <button type="button" onclick="analyzeSEO('{{ content.id }}')"
+                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+                SEO Analizi Yap
+            </button>
+        </div>
+    </div>
+
+    <!-- İçerik -->
+    <article class="prose prose-lg max-w-none">
+        <!-- Ana Başlık -->
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">
+            {{ content.title }}
+        </h1>
+
+        <!-- İçerik Metni -->
+        <div class="content-body space-y-6">
+            {{ formatted_content|safe }}
+        </div>
+    </article>
+
+    <!-- SEO Bilgileri -->
+    <div class="mt-12 bg-white rounded-lg border border-gray-200 p-6">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">SEO Bilgileri</h2>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">SEO Başlığı</label>
+                <p class="mt-1 text-sm text-gray-900">{{ content.seo_title }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Meta Açıklama</label>
+                <p class="mt-1 text-sm text-gray-900">{{ content.seo_description }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Anahtar Kelimeler</label>
+                <div class="mt-1 flex flex-wrap gap-2">
+                    {% for keyword in content.keywords_list %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            {{ keyword }}
+                        </span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SEO Analizi Modal -->
+<div id="seoAnalysisModal" class="hidden fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                            SEO Analizi Sonuçları
+                        </h3>
+                        <div class="mt-4" id="seoAnalysisResults">
+                            <!-- Analiz sonuçları buraya gelecek -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" onclick="closeSEOModal()"
+                        class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    Kapat
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Özel stil tanımlamaları */
+    .content-body h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        color: #1a202c;
+    }
+    
+    .content-body p {
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+        line-height: 1.75;
+        color: #4a5568;
+    }
+    
+    .content-body ul {
+        list-style-type: disc;
+        margin-left: 1.5rem;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .content-body li {
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+</style>
+
+<script>
+function changeStatus(slug) {
+    fetch(`/content/${slug}/change-status/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+        },
+    }).then(response => {
+        if (response.ok) {
+            window.location.reload();
+        }
+    });
+}
+
+function analyzeSEO(contentId) {
+    // Modal'ı göster
+    document.getElementById('seoAnalysisModal').classList.remove('hidden');
+    
+    // SEO analizi isteği yap
+    fetch(`/seo/analyze/${contentId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('SEO Analiz Sonuçları:', data);  // Debug için
+        // Analiz sonuçlarını göster
+        const resultsDiv = document.getElementById('seoAnalysisResults');
+        resultsDiv.innerHTML = `
+            <div class="space-y-4">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-medium text-gray-900">Başlık Analizi</h4>
+                    <p class="text-sm text-gray-500">Uzunluk: ${data.title_length} karakter</p>
+                    <div class="mt-2 ${data.title_score >= 70 ? 'text-green-600' : 'text-yellow-600'}">
+                        Skor: ${data.title_score}/100
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-medium text-gray-900">Meta Açıklama Analizi</h4>
+                    <p class="text-sm text-gray-500">Uzunluk: ${data.description_length} karakter</p>
+                    <div class="mt-2 ${data.description_score >= 70 ? 'text-green-600' : 'text-yellow-600'}">
+                        Skor: ${data.description_score}/100
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-medium text-gray-900">Anahtar Kelime Analizi</h4>
+                    <p class="text-sm text-gray-500">Yoğunluk: %${data.keyword_density}</p>
+                    <div class="mt-2 ${data.keyword_score >= 70 ? 'text-green-600' : 'text-yellow-600'}">
+                        Skor: ${data.keyword_score}/100
+                    </div>
+                </div>
+            </div>
+        `;
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('seoAnalysisResults').innerHTML = `
+            <div class="text-red-600">
+                SEO analizi yapılırken bir hata oluştu: ${error.message}
+            </div>
+        `;
+    });
+}
+
+function closeSEOModal() {
+    document.getElementById('seoAnalysisModal').classList.add('hidden');
+}
+</script>
+{% endblock %} 
